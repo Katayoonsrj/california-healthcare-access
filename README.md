@@ -1,119 +1,114 @@
-# After COVID: Healthcare Access & Income Inequality in California
+# Healthcare Access Inequality in California Before and After COVID-19
 
-**DATA 271 · Data Wrangling & Visualization · Cal Poly Humboldt · Spring 2026**
+**Course:** DATA 271 — Data Wrangling | Cal Poly Humboldt | Spring 2026  
+**Authors:** Katayoon Seraji Nezhad · Justin Arellano
 
 ---
 
 ## Overview
 
-This project examines whether the COVID-19 pandemic permanently widened healthcare access gaps between low- and high-income Californians. Using U.S. Census ACS data across all 58 California counties from 2018 to 2023, we compare pre-pandemic (2018–2019) and post-pandemic (2021–2023) trends in uninsured rates, poverty rates, housing cost burden, and median income — segmented by county poverty level.
+This project examines whether the COVID-19 pandemic widened pre-existing healthcare access inequalities across California's 58 counties. Using U.S. Census Bureau data from 2018 to 2023, we compare uninsured rates, poverty, housing cost burden, and median income before (2018–2019) and after (2021–2023) the pandemic, with a focus on whether high-poverty counties experienced different trajectories than low-poverty counties.
 
-The analysis is framed around a core question: **did income growth after COVID actually translate to improved economic security and healthcare access, or did rising costs absorb those gains?**
+All data is fetched programmatically from the Census Bureau API — no manual spreadsheet work is involved.
+
+---
+
+## Research Question
+
+> Did the COVID-19 pandemic widen healthcare access disparities across California counties, and did economic recovery benefit high-poverty and low-poverty counties equally?
+
+---
+
+## Data Source
+
+**U.S. Census Bureau — American Community Survey (ACS) 5-Year Estimates**  
+[data.census.gov](https://data.census.gov/table?q=california&g=010XX00US$0500000)
+
+The ACS 5-year product is used because it covers all 58 California counties, including small rural counties with populations below the 65,000-person threshold required for ACS 1-year publication.
+
+| Variable | ACS Code | Definition |
+|----------|----------|------------|
+| Population | `B01003_001E` | Total population estimate |
+| Median Income | `B19013_001E` | Median household income ($) |
+| Poverty Rate | `S1701_C03_001E` | % of people below the federal poverty level |
+| Unemployment Rate | `S2301_C04_001E` | % of civilian labor force (16+) unemployed |
+| Uninsured Rate | `S2701_C05_001E` | % of people with no health insurance |
+| Cost Burden Rate | `DP04_0142PE` | % of housing units spending ≥30% of income on housing |
+
+**CPI data** (for inflation adjustment) is fetched from the [Bureau of Labor Statistics API](https://www.bls.gov/developers/) — series `CUUR0000SA0`.
+
+---
+
+## Notebook Structure
+
+| Section | Description |
+|---------|-------------|
+| 1. Introduction | Research question and motivation |
+| 2. Required Libraries | All imports with descriptions |
+| 3. Data Preparation | Census API extraction across 6 years and 3 table types |
+| 4. Data Cleaning | Sentinel handling, dtype fixes, missing values, period labeling |
+| 5. Summary Statistics | Descriptive stats and year-by-year trend table |
+| 6. Column Engineering | `poverty_level` (categorical) and `income_after_housing` (numeric) |
+| 7. Visualizations | 5 plots with interpretations |
+| 8. Grouped Analysis | Pre- vs. post-pandemic comparison by poverty level |
+| 9. Summary of Findings | Key findings and open questions |
+| Bonus | CPI inflation adjustment via BLS API |
 
 ---
 
 ## Key Findings
 
-- **Median income rose steadily** across all counties from 2018 to 2023, but this did not produce consistent improvements in other economic indicators
-- **Housing cost burden increased post-2020**, particularly in high-poverty counties, suggesting that income gains were offset by rising costs
-- **Poverty and uninsured rates plateaued after 2020** rather than continuing their pre-pandemic declining trend
-- **High-poverty counties consistently bore greater cost burdens** than low-poverty counties in every year studied — the gap did not narrow post-pandemic
-- A newly engineered **income-after-housing** metric revealed that effective purchasing power remains constrained despite nominal income growth
-
----
-
-## Dataset
-
-**Source:** U.S. Census Bureau — American Community Survey (ACS)
-[data.census.gov](https://data.census.gov)
-
-| Variable | Description |
-|----------|-------------|
-| `County` | All 58 California counties |
-| `Year` | 2018–2023 (6 years) |
-| `Population` | County population estimate |
-| `Median Income` | Median household income (USD) |
-| `Poverty Rate` | Percentage of residents below poverty line |
-| `Unemployment Rate` | County unemployment rate |
-| `Uninsured Rate` | Percentage of residents without health insurance |
-| `Cost Burden Rate` | Share of households spending >30% of income on housing |
-
-**Size:** 348 rows × 8 columns (58 counties × 6 years)
-
-The dataset was assembled by pulling annual ACS county-level tables for each year and combining them into a single panel dataset.
-
----
-
-## Methods
-
-### Data Cleaning
-- Stripped formatting characters (`%`, `$`, `,`) from numeric columns stored as strings
-- Converted all rate columns to float decimals (e.g., `10.6%` → `0.106`)
-- Standardized column names to snake_case
-- Checked for and confirmed no duplicate or missing rows
-
-### Feature Engineering
-Two new columns were created to support the analysis:
-
-| Column | Type | Definition |
-|--------|------|------------|
-| `poverty_level` | Categorical | `"High Poverty"` if `poverty_rate ≥ 15%`, else `"Low Poverty"` |
-| `income_after_housing` | Numerical | `median_income × (1 − cost_burden_rate)` — estimated take-home income after housing costs |
-
-### Exploratory Data Analysis
-- **Trend plots** — median income, poverty rate, and uninsured rate over time (2018–2023)
-- **Grouped line plot** — cost burden rate over time, split by poverty level (faceted by `hue=`)
-- **Dual-axis trend** — poverty rate vs. uninsured rate overlaid to compare trajectories
-- **Grouped aggregation** — yearly averages by poverty classification to quantify the gap
+- The statewide uninsured rate declined from ~7–8% in 2018 to ~5–6% by 2023, and median income rose throughout — but this aggregate improvement masks significant county-level inequality.
+- High-poverty counties (poverty rate ≥15%) maintained uninsured rates approximately **twice** those of low-poverty counties across the entire 2018–2023 period, and this gap did not meaningfully narrow post-pandemic.
+- Housing cost burden rose **every single year** for all counties, with both poverty groups exceeding the HUD 30% cost-burdened threshold throughout — no pandemic-era policy interrupted this trend.
+- The county-level comparison (Trinity vs. Humboldt vs. Santa Clara) shows the full range: the highest-income county converged toward near-universal coverage while the lowest-income county remained near double the statewide average even in 2023.
 
 ---
 
 ## Visualizations
 
-Key charts produced in the notebook:
-
-1. **Median Income Over Time** — statewide average across all 58 counties
-2. **Cost Burden Rate by Poverty Level** — grouped line plot showing high vs. low poverty counties diverging post-2020
-3. **Poverty vs. Uninsured Rate Over Time** — dual trend showing plateau effect after pandemic
-
----
-
-## Files
-
-| File | Description |
-|------|-------------|
-| `midterm2_takehome.ipynb` | Full analysis notebook — cleaning, EDA, feature engineering, visualizations |
-| `california_county_data.csv` | Cleaned dataset: 58 CA counties × 6 years (2018–2023), 8 variables from U.S. Census ACS |
+1. Median income vs. uninsured rate over time (dual-axis)
+2. Uninsured rate by poverty level over time (grouped line plot)
+3. Poverty rate vs. uninsured rate — decoupling post-pandemic
+4. Housing cost burden by poverty level over time
+5. Faceted county comparison: Trinity · Humboldt · Santa Clara
 
 ---
 
-## Tech Stack
+## Requirements
 
-`Python` · `Pandas` · `NumPy` · `Matplotlib` · `Seaborn` · `Jupyter Notebook`
+```
+pandas
+numpy
+matplotlib
+seaborn
+requests
+```
+
+Install with:
+```bash
+pip install pandas numpy matplotlib seaborn requests
+```
 
 ---
 
 ## How to Run
 
-1. Clone the repo or download the files
-2. Place `california_county_data.csv` in the same directory as the notebook
-3. Open `midterm2_takehome.ipynb` in Jupyter or Google Colab
-4. Run all cells top to bottom
+1. Clone the repository
+2. Open `DATA271_Final_Project.ipynb` in JupyterHub or Jupyter Notebook
+3. Run all cells — data is fetched live from the Census and BLS APIs, no local data files needed
 
-> No API keys or external dependencies required — the dataset is included in the repo.
-
----
-
-## Limitations & Future Work
-
-- The dataset combines ACS variables that were pulled separately per year — minor methodology changes in ACS collection between years may introduce noise
-- Cost burden rate is a housing-specific measure and does not capture all cost-of-living dimensions
-- Future work could incorporate CDC BRFSS data on self-reported healthcare access and foregone care due to cost, enabling a more direct measure of healthcare barriers beyond insurance status
-- Urban vs. rural segmentation could reveal geographic patterns not visible at the county level
+> **Note:** The Census API key is included in the notebook. For your own projects, register for a free key at [api.census.gov/data/key_signup.html](https://api.census.gov/data/key_signup.html).
 
 ---
 
-## Authors
+## Repository Structure
 
-Katayoon Seraji Nezhad · Justin Arellano
-Cal Poly Humboldt — DATA 271, Spring 2026
+```
+├── DATA271_Final_Project.ipynb   # Main analysis notebook
+└── README.md
+```
+
+---
+
+*Cal Poly Humboldt · DATA 271 · Spring 2026*
