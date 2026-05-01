@@ -9,7 +9,7 @@
 
 This project examines whether the COVID-19 pandemic widened pre-existing healthcare access inequalities across California's 58 counties. Using U.S. Census Bureau data from 2018 to 2023, we compare uninsured rates, poverty, housing cost burden, and median income before (2018–2019) and after (2021–2023) the pandemic, with a focus on whether high-poverty counties experienced different trajectories than low-poverty counties.
 
-All data is fetched programmatically from the Census Bureau API — no manual spreadsheet work is involved.
+All data is fetched programmatically from the Census Bureau API.
 
 ---
 
